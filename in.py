@@ -49,7 +49,7 @@ def box_letters(img):
     tmp = img.copy()
 
     blur = cv.medianBlur(img, 5)
-    blur = cv.GaussianBlur(img, (5, 5), 3)
+    blur = cv.GaussianBlur(img, (5, 5), 5)
     _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     # TODO: Find optimal values for thresholding
@@ -71,7 +71,7 @@ def box_letters(img):
 
 
 def main():
-    img = loadImg('test_boxing_3.jpg')
+    img = loadImg('test_boxing_2.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
@@ -81,7 +81,11 @@ def main():
     for i, box in enumerate(boxes):
         x, y, w, h = box
 
-        print(w * h, len(boxes))
+        if w * h < 100:
+            continue
+
+        plotImg( img[y: y + h, x: x + w] )
+        print(w * h, i)
 
 
 if __name__ == "__main__":
