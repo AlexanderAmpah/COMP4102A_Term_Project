@@ -49,7 +49,7 @@ def box_letters(img):
     tmp = img.copy()
 
     blur = cv.medianBlur(img, 5)
-    blur = cv.GaussianBlur(img, (5, 5), 5)
+    blur = cv.GaussianBlur(img, (7, 7), 3)
     _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     # TODO: Find optimal values for thresholding
@@ -83,6 +83,9 @@ def main():
 
         if w * h < 100:
             continue
+
+        # If one box contains another, remove the inner one
+        # If two boxes overlap, edit the first one to remove the second one
 
         plotImg( img[y: y + h, x: x + w] )
         print(w * h, i)
