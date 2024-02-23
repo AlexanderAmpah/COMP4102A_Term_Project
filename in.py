@@ -62,23 +62,26 @@ def box_letters(img):
 
     for c in contours:
         p = cv.arcLength(c, True)
-        approx = cv.approxPolyDP(c, 10, True)
+        approx = cv.approxPolyDP(c, 2, True)
         x, y, w, h = cv.boundingRect(approx)
         boxes.append( (x, y, w, h) )
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    return tmp, thresh, boxes
+    return tmp, boxes, thresh
 
 
 def main():
     img = loadImg('test_boxing_3.jpg')
-    boxed, thresh, boxes = box_letters(img)
+    boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
     plotImg(boxed)
     plotImg(thresh)
 
+    for i, box in enumerate(boxes):
+        x, y, w, h = box
 
+        print(w * h, len(boxes))
 
 
 if __name__ == "__main__":
