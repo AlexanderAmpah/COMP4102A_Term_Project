@@ -48,8 +48,8 @@ Boxes in individual letters i.e., blobs
 def box_letters(img):
     tmp = img.copy()
 
-    blur = cv.medianBlur(img, 9)
-    blur = cv.GaussianBlur(img, (7, 7), 5)
+    blur = cv.medianBlur(img, 5)
+    blur = cv.GaussianBlur(img, (5, 5), 3)
     _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     # TODO: Find optimal values for thresholding
@@ -58,23 +58,27 @@ def box_letters(img):
     # test_boxing_3.jpg: between 160 and 180 but no false positives and false negatives
 
     contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    boxes = []
 
     for c in contours:
         p = cv.arcLength(c, True)
-        approx = cv.approxPolyDP(c, 0.02 * p, True)
+        approx = cv.approxPolyDP(c, 10, True)
         x, y, w, h = cv.boundingRect(approx)
+        boxes.append( (x, y, w, h) )
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    return tmp, thresh
+    return tmp, thresh, boxes
 
 
 def main():
-    img = loadImg('test_boxing.jpg')
-    boxed, thresh = box_letters(img)
+    img = loadImg('test_boxing_3.jpg')
+    boxed, thresh, boxes = box_letters(img)
 
     plotImg(img)
     plotImg(boxed)
     plotImg(thresh)
+
+
 
 
 if __name__ == "__main__":
