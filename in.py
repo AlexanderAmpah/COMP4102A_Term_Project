@@ -49,7 +49,7 @@ def box_letters(img):
     tmp = img.copy()
 
     blur = cv.medianBlur(img, 5)
-    blur = cv.GaussianBlur(img, (7, 7), 3)
+    blur = cv.GaussianBlur(img, (17, 17), 6)
     _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     # TODO: Find optimal values for thresholding
@@ -70,25 +70,32 @@ def box_letters(img):
     return tmp, boxes, thresh
 
 
+def getBackground(img):
+    # blur image using averaging, then get minimum value
+    # Since pencil / pen is darker than paper, the background colour is lighter 
+    # blurring using averaging removes light spots 
+    # Taking the max value avoids influence from writing
+    # white is 255
+
+    blur = cv.blur(img, (9, 9))
+    background = np.max(blur)
+
+    return background
+
+
 def main():
-    img = loadImg('test_boxing_2.jpg')
+    img = loadImg('test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
     plotImg(boxed)
     plotImg(thresh)
 
-    for i, box in enumerate(boxes):
-        x, y, w, h = box
+    # If one box contains another, remove the inner one
+    # If two boxes overlap, edit the first one to remove the second one
 
-        if w * h < 100:
-            continue
-
-        # If one box contains another, remove the inner one
-        # If two boxes overlap, edit the first one to remove the second one
-
-        plotImg( img[y: y + h, x: x + w] )
-        print(w * h, i)
+    colour = getBackground(img)
+    print(colour)
 
 
 if __name__ == "__main__":
