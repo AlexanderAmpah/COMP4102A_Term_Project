@@ -43,7 +43,25 @@ def loadImg(filename):
 
 
 """
+"""
+def overlaps(box1, box2):
+    x1, y1, w1, h1 = box1
+    x2, y2, w2, h2 = box2
+
+    if (x1 + w1) > (x2 + w2) and (y1 + h1) > (y2 + h2):
+        return True 
+    
+    return False
+
+
+"""
 Boxes in individual letters i.e., blobs
+Args:
+    img:    Grayscale image
+Returns:
+    tmp:    Image with boxed letters.
+    boxes:  List of box dimensions and positions.
+    thresh: Optimal threshold image (for debugging).
 """
 def box_letters(img):
     tmp = img.copy()
@@ -67,24 +85,46 @@ def box_letters(img):
         boxes.append( (x, y, w, h) )
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    return tmp, boxes, thresh
+    boxes.sort(key=lambda a: a[0])
+
+    return tmp, boxes[1:], thresh
 
 
-def getBackground(img):
-    # blur image using averaging, then get minimum value
-    # Since pencil / pen is darker than paper, the background colour is lighter 
-    # blurring using averaging removes light spots 
-    # Taking the max value avoids influence from writing
-    # white is 255
+"""
+Filters boxes that are too small or inside another box.
+"""
+def filter_boxes(boxes):
+    filtered_boxes = []
+    inside_boxes = []
 
-    blur = cv.blur(img, (9, 9))
-    background = np.max(blur)
+    for box in boxes:
+        x, y, w, h = box
 
-    return background
+        if w * h >= 100:
+            filtered_boxes.append(box)
+
+    n = len(filtered_boxes)
+
+    # Filter out boxes that are inside another larger box
+    # Sort by x coordinate first to get order
+
+    for i in range(n):
+        box1 = filtered_boxes[i]
+
+        for j in range(i + 1, n):
+            box2 = filtered_boxes[j]
+
+            if overlaps(box1, box2):
+                inside_boxes.append(box2)
+
+    for box in inside_boxes:
+        filtered_boxes.remove(box)
+
+    return filtered_boxes
 
 
 def main():
-    img = loadImg('test_boxing.jpg')
+    img = loadImg('test_boxing_3.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
@@ -92,11 +132,15 @@ def main():
     plotImg(thresh)
 
     # If one box contains another, remove the inner one
-    # If two boxes overlap, edit the first one to remove the second one
+    # If two boxes overlap, edit the first one to remove the second ones
 
-    colour = getBackground(img)
-    print(colour)
+    newboxes = filter_boxes(boxes)
 
+    tmp = img.copy()
+    for x, y, w, h in newboxes:
+        tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+    plotImg(tmp)
 
 if __name__ == "__main__":
     main()
