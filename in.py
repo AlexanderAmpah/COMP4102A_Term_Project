@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
-
+import mst
 
 """
 Plots image.
@@ -141,6 +141,11 @@ def main():
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
     plotImg(tmp)
+
+    centers = mst.calculate_centers(newboxes)
+    dist = mst.distance_matrix(centers)
+
+    print(dist)
 
 if __name__ == "__main__":
     main()
