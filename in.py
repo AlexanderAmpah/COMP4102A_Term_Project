@@ -64,6 +64,7 @@ Returns:
     thresh: Optimal threshold image (for debugging).
 """
 def box_letters(img):
+    n, m = img.shape
     tmp = img.copy()
 
     blur = cv.medianBlur(img, 5)
@@ -85,9 +86,12 @@ def box_letters(img):
         boxes.append( (x, y, w, h) )
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    boxes.sort(key=lambda a: a[0])
+    # Sort boxes from left to right, then remove bounding box for image
 
-    return tmp, boxes[1:], thresh
+    boxes.sort(key=lambda a: a[0])
+    boxes.remove( (0, 0, m, n) )
+
+    return tmp, boxes, thresh
 
 
 """
@@ -127,12 +131,9 @@ def main():
     img = loadImg('test_boxing_3.jpg')
     boxed, boxes, thresh = box_letters(img)
 
-    plotImg(img)
-    plotImg(boxed)
-    plotImg(thresh)
-
-    # If one box contains another, remove the inner one
-    # If two boxes overlap, edit the first one to remove the second ones
+    # plotImg(img)
+    # plotImg(boxed)
+    # plotImg(thresh)
 
     newboxes = filter_boxes(boxes)
 
@@ -140,12 +141,21 @@ def main():
     for x, y, w, h in newboxes:
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    plotImg(tmp)
+    # plotImg(tmp)
 
     centers = mst.calculate_centers(newboxes)
     dist = mst.distance_matrix(centers)
 
-    print(dist)
+    i = np.random.randint(len(centers))
+    j = np.random.randint(len(centers))
+
+    point1 = np.array(centers[i])
+    point2 = np.array(centers[j])
+
+    d = np.sqrt( np.sum( (point1 - point2) ** 2 ) )
+
+    print(d, dist[i, j], i, j)
+
 
 if __name__ == "__main__":
     main()
