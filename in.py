@@ -128,12 +128,12 @@ def filter_boxes(boxes):
 
 
 def main():
-    img = loadImg('test_boxing_3.jpg')
+    img = loadImg('test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
-    # plotImg(img)
-    # plotImg(boxed)
-    # plotImg(thresh)
+    plotImg(img)
+    plotImg(boxed)
+    plotImg(thresh)
 
     newboxes = filter_boxes(boxes)
 
@@ -145,7 +145,11 @@ def main():
 
     centers = mst.calculate_centers(newboxes)
     dist, points_dict = mst.distance_matrix(centers)
+    verticies, edges, vertex_edge_map = mst.min_spanning_tree(dist, centers)
 
+    print(verticies)
+    print(edges)
+    print(vertex_edge_map)
     
 
 
