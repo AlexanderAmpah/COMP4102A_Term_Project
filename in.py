@@ -141,20 +141,12 @@ def main():
     for x, y, w, h in newboxes:
         tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    # plotImg(tmp)
+    plotImg(tmp)
 
     centers = mst.calculate_centers(newboxes)
-    dist = mst.distance_matrix(centers)
+    dist, points_dict = mst.distance_matrix(centers)
 
-    i = np.random.randint(len(centers))
-    j = np.random.randint(len(centers))
-
-    point1 = np.array(centers[i])
-    point2 = np.array(centers[j])
-
-    d = np.sqrt( np.sum( (point1 - point2) ** 2 ) )
-
-    print(d, dist[i, j], i, j)
+    
 
 
 if __name__ == "__main__":
