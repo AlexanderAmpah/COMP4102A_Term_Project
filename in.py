@@ -30,6 +30,60 @@ def plotImg(img, title='', save=False):
 
 
 """
+Plots boxes on image.
+Args:
+    img:    Underlying image.
+    boxes:  List of boxes to plot.
+    title:  Image title.
+    save:   Save image flag.
+Returns:
+    Modified image with boxes.
+"""
+def plotBoxes(img, boxes, title='', save=False):
+    tmp = img.copy()
+    for x, y, w, h in boxes:
+        tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+    plotImg(tmp, title=title, save=save)
+
+    return tmp
+
+
+"""
+Plots minimum spanning tree over image.
+Args:
+    img:    Underlying image.
+    mst:    Minimum spanning tree tuple of the form: (vertex list, adjacency matrix, vertex to matrix index mapping).
+    colour: Line colour.
+    radius: Point radius.
+    title:  Plot title.
+    save:   Save image flag.
+Returns:
+    Modified image with minimum spanning tree.
+"""
+def plotMST(img, mst, colour=(0, 0, 255), radius=4, title='', save=False):
+    verticies, edges, vertex_edge_map = mst
+    tmp = img.copy()
+
+    for u in verticies:
+        for v in verticies:
+            i = vertex_edge_map[u]
+            j = vertex_edge_map[v]
+
+            if edges[i, j] == 1:
+                start = np.int32(u)
+                end = np.int32(v)
+
+                tmp = cv.circle(tmp, start, radius, colour, thickness=radius)
+                tmp = cv.circle(tmp, end, radius, colour, thickness=radius)
+                tmp = cv.line(tmp, start, end, colour, 2)
+    
+    plotImg(tmp, title=title, save=save)
+
+    return tmp
+
+
+"""
 Loads grayscale image with filename.
 Args:
     filename:   Image filename.
@@ -43,6 +97,12 @@ def loadImg(filename):
 
 
 """
+Checks if one box contains the other.
+Args:
+    box1:   Rectangle defined by (x, y, w, h).
+    box2:   Rectangle defined by (x, y, w, h).
+Returns:
+    If box1 contains box2.
 """
 def overlaps(box1, box2):
     x1, y1, w1, h1 = box1
@@ -141,36 +201,13 @@ def main():
 
     newboxes = filter_boxes(boxes)
 
-    tmp = img.copy()
-    for x, y, w, h in newboxes:
-        tmp = cv.rectangle(tmp, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
-    plotImg(tmp)
+    boxed = plotBoxes(img, newboxes)
 
     centers = mst.calculate_centers(newboxes)
     dist, points_dict = mst.distance_matrix(centers)
     verticies, edges, vertex_edge_map = mst.min_spanning_tree(dist, centers)
 
-    # print(verticies, '\n')
-    # print(edges, '\n')
-    # print(vertex_edge_map)
-
-    colour = (0, 0, 255)
-    
-    for u in verticies:
-        for v in verticies:
-            i = vertex_edge_map[u]
-            j = vertex_edge_map[v]
-
-            if edges[i, j] == 1:
-                start = np.int32(u)
-                end = np.int32(v)
-
-                tmp = cv.circle(tmp, start, 4, colour, 4)
-                tmp = cv.circle(tmp, end, 4, colour, 4)
-                tmp = cv.line(tmp, start, end, colour, 2)
-    
-    plotImg(tmp)
+    plotMST(boxed, (verticies, edges, vertex_edge_map))
 
 
 if __name__ == "__main__":
