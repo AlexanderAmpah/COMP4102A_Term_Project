@@ -127,6 +127,10 @@ def filter_boxes(boxes):
     return filtered_boxes
 
 
+# TODO: Compute angle between point and neighbours. 
+#       If angle is near 90 degrees, join corresponding box
+
+
 def main():
     img = loadImg('test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
@@ -147,10 +151,26 @@ def main():
     dist, points_dict = mst.distance_matrix(centers)
     verticies, edges, vertex_edge_map = mst.min_spanning_tree(dist, centers)
 
-    print(verticies)
-    print(edges)
-    print(vertex_edge_map)
+    # print(verticies, '\n')
+    # print(edges, '\n')
+    # print(vertex_edge_map)
+
+    colour = (0, 0, 255)
     
+    for u in verticies:
+        for v in verticies:
+            i = vertex_edge_map[u]
+            j = vertex_edge_map[v]
+
+            if edges[i, j] == 1:
+                start = np.int32(u)
+                end = np.int32(v)
+
+                tmp = cv.circle(tmp, start, 4, colour, 4)
+                tmp = cv.circle(tmp, end, 4, colour, 4)
+                tmp = cv.line(tmp, start, end, colour, 2)
+    
+    plotImg(tmp)
 
 
 if __name__ == "__main__":
