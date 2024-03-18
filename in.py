@@ -8,7 +8,7 @@ Plots image.
 Args:
     img:    Image to plot.
     title:  Image title.
-    save:   Save image flag.       
+    save:   Save image to out folder.       
 """
 def plotImg(img, title='', save=False):
     plt.figure(figsize=(10, 5))
@@ -20,9 +20,9 @@ def plotImg(img, title='', save=False):
         filename = ''
 
         if title == '':
-            filename = f'images/tmp.png'
+            filename = f'out/tmp.png'
         else:
-            filename = 'images/' + title.replace(' ', '_') + '.png'
+            filename = 'out/' + title.replace(' ', '_') + '.png'
 
         plt.savefig(filename)
 
@@ -187,12 +187,10 @@ def filter_boxes(boxes):
     return filtered_boxes
 
 
-# TODO: Compute angle between point and neighbours. 
-#       If angle is near 90 degrees, join corresponding box
-
-
 def main():
-    img = loadImg('test_boxing.jpg')
+    # Testing
+
+    img = loadImg('images/test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
