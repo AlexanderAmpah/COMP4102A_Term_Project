@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import mst
+from letters import group_ij
 
 """
 Plots image.
@@ -190,7 +191,9 @@ def filter_boxes(boxes):
 def main():
     # Testing
 
-    img = loadImg('images/test_boxing.jpg')
+    # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
+
+    img = loadImg('images/test_boxing_3.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
@@ -203,9 +206,13 @@ def main():
 
     centers = mst.calculate_centers(newboxes)
     dist, points_dict = mst.distance_matrix(centers)
-    verticies, edges, vertex_edge_map = mst.min_spanning_tree(dist, centers)
+    tree = mst.min_spanning_tree(dist, centers)
 
-    plotMST(boxed, (verticies, edges, vertex_edge_map))
+    plotMST(boxed, tree)
+
+    newboxes = group_ij(newboxes, tree)
+    plotBoxes(img, newboxes)
+
 
 
 if __name__ == "__main__":
