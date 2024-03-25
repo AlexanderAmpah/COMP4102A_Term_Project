@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import mst
-from letters import group_ij
+from letters import group_ij, mark_spaces
 
 """
 Plots image.
@@ -82,6 +82,35 @@ def plotMST(img, mst, colour=(0, 0, 255), radius=4, title='', save=False):
     plotImg(tmp, title=title, save=save)
 
     return tmp
+
+
+def plotSpaces(img, mst, spaces, radius=4, title='', save=False):
+    verticies, edges, vertex_edge_map = mst
+    tmp = img.copy()
+
+    white = (255, 255, 255)
+    black = (0, 0, 255)
+
+    for u in verticies:
+        for v in verticies:
+            i = vertex_edge_map[u]
+            j = vertex_edge_map[v]
+
+            if edges[i, j] == 1:
+                start = np.int32(u)
+                end = np.int32(v)
+
+                if (i, j) in spaces:
+                    tmp = cv.circle(tmp, start, radius, white, thickness=radius)
+                    tmp = cv.circle(tmp, end, radius, white, thickness=radius)
+                    tmp = cv.line(tmp, start, end, white, 2)
+
+                else:
+                    tmp = cv.circle(tmp, start, radius, black, thickness=radius)
+                    tmp = cv.circle(tmp, end, radius, black, thickness=radius)
+                    tmp = cv.line(tmp, start, end, black, 2)
+                
+    plotImg(tmp, title=title, save=save)
 
 
 """
@@ -196,18 +225,23 @@ def main():
     plotImg(boxed)
     plotImg(thresh)
 
-    newboxes = filter_boxes(boxes)
+    boxes = filter_boxes(boxes)
 
-    boxed = plotBoxes(img, newboxes)
+    boxed = plotBoxes(img, boxes)
 
-    centers = mst.calculate_centers(newboxes)
+    centers = mst.calculate_centers(boxes)
     dist, points_dict = mst.distance_matrix(centers)
     tree = mst.min_spanning_tree(dist, centers)
 
     plotMST(boxed, tree, colour=(255, 255, 255))
 
-    newboxes = group_ij(newboxes, tree)
-    plotBoxes(img, newboxes)
+    newboxes, newtree = group_ij(boxes, tree)
+    newboxed = plotBoxes(img, newboxes)
+
+    plotMST(newboxed, newtree, colour=(255, 255, 255))
+
+    spaces = mark_spaces(newboxes, newtree, threshold=500)
+    plotSpaces(newboxed, newtree, spaces)
 
 
 if __name__ == "__main__":

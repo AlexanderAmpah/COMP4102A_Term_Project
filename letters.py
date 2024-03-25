@@ -1,5 +1,6 @@
 import numpy as np
 from queue import Queue
+from mst import distance_matrix, min_spanning_tree
 
 
 """
@@ -51,6 +52,8 @@ def group_ij(boxes, mst):
     queue = Queue()
     queue.put(v)
 
+    newverticies = []
+
     # Breadth first traversal of tree
 
     while not queue.empty():
@@ -62,6 +65,7 @@ def group_ij(boxes, mst):
 
         box1 = boxes[v]
         merged_boxes.append(box1)
+        newverticies.append(vertex)
 
         if box1 in merged:
             merged_boxes.remove(box1)
@@ -86,22 +90,28 @@ def group_ij(boxes, mst):
 
             if dx == 0 or abs(dy/dx) > 1:
                 box = merge_boxes(box1, box2)
-
                 merged_boxes.append(box)
                 merged_boxes.remove(box1)
 
                 merged.add(box1)
                 merged.add(box2)
 
-    return merged_boxes
+                newverticies.remove(vertex)
+
+    matrix, _ = distance_matrix(newverticies)
+    mst = min_spanning_tree(matrix, newverticies)
+
+    return merged_boxes, mst
 
 
-def mark_spaces(boxes, mst):
+def mark_spaces(boxes, mst, threshold=50):
     # Ideally have threshold on edge distance
     # Mark those above threshold as spaces
-    # Use box width
+    # Use box width / horizontal component
 
     verticies, edges, vertex_edge_mapping = mst
+    print(verticies)
+    spaces = set()
 
     vertex = verticies[0]
     v = vertex_edge_mapping[vertex]
@@ -110,6 +120,8 @@ def mark_spaces(boxes, mst):
     queue = Queue()
     queue.put(v)
 
+    x, _, w, _ = boxes[v]
+
     while not queue.empty():
         v = queue.get()
 
@@ -117,11 +129,20 @@ def mark_spaces(boxes, mst):
         neighbours = np.where(membership == 1)[0]
 
         for u in neighbours:
-
             if not u in discovered:
                 discovered.add(u)
                 queue.put(u)
 
+            # Compute horizontal distance between point and neighbour.
+                
+            X, _, W, _ = boxes[u]
+
+            dist = abs(x + w - X)
+
+            if dist > threshold and x + w < X:
+                spaces.add( (v, u) )
+
+    return spaces
 
 
 def extract_letters(img, boxes):

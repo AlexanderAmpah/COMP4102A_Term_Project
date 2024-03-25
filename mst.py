@@ -12,7 +12,6 @@ Returns:
     centers: List of center points for each box as 2 x n matrix
 """
 def calculate_centers(boxes):
-    n = len(boxes)
     centers = []
 
     for box in boxes:
@@ -59,9 +58,14 @@ def min_spanning_tree(distance_matrix, points):
     for i in range(n):
         for j in range(n):
             if edges[i, j] == 1:
-                vertices.extend( (points[i], points[j]) )
                 vertex_edge_map[ points[i] ] = i
                 vertex_edge_map[ points[j] ] = j
+
+                if not points[i] in vertices:
+                    vertices.append( points[i] )
+
+                if not points[j] in vertices:
+                    vertices.append( points[j] )
     
     return vertices, edges, vertex_edge_map
 
