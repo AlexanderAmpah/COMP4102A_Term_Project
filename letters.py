@@ -27,14 +27,22 @@ def merge_boxes(box1, box2):
 
 
 """
+Merges dots above "i" and "j" with bottom parts.
+Args:
+    boxes:  List of letter bounding boxes.
+    mst:    Tuple of (vertex point list, adjacency matrix, vertex index to matrix index mapping)
+Returns:
+    merged_boxes:   Boxed letters with proper boxing of "i" and "j"
 """
 def group_ij(boxes, mst):
+    # Breadth first search but check angle between node and neighbour
+    # If slope of edge is larger than 1, merge cells
+    # Might modify to work with multiple lines of text
+
     verticies, edges, vertex_edge_mapping = mst
     edge_vertex_mapping = { v: k for k, v in vertex_edge_mapping.items() }
     merged_boxes = []
     merged = set()
-
-    n = len(verticies)
 
     vertex = verticies[0]
     v = vertex_edge_mapping[vertex]
@@ -86,6 +94,34 @@ def group_ij(boxes, mst):
                 merged.add(box2)
 
     return merged_boxes
+
+
+def mark_spaces(boxes, mst):
+    # Ideally have threshold on edge distance
+    # Mark those above threshold as spaces
+    # Use box width
+
+    verticies, edges, vertex_edge_mapping = mst
+
+    vertex = verticies[0]
+    v = vertex_edge_mapping[vertex]
+
+    discovered = {v}
+    queue = Queue()
+    queue.put(v)
+
+    while not queue.empty():
+        v = queue.get()
+
+        membership = edges[v, :]    # All edges connected to v
+        neighbours = np.where(membership == 1)[0]
+
+        for u in neighbours:
+
+            if not u in discovered:
+                discovered.add(u)
+                queue.put(u)
+
 
 
 def extract_letters(img, boxes):

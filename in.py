@@ -132,11 +132,6 @@ def box_letters(img):
     blur = cv.GaussianBlur(img, (17, 17), 6)
     _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
-    # TODO: Find optimal values for thresholding
-    # test_boxing.jpg: 165
-    # test_boxing_2.jpg: 127
-    # test_boxing_3.jpg: between 160 and 180 but no false positives and false negatives
-
     contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     boxes = []
 
@@ -183,7 +178,8 @@ def filter_boxes(boxes):
                 inside_boxes.append(box2)
 
     for box in inside_boxes:
-        filtered_boxes.remove(box)
+        if box in filtered_boxes:
+            filtered_boxes.remove(box)
 
     return filtered_boxes
 
@@ -193,7 +189,7 @@ def main():
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 
-    img = loadImg('images/test_boxing_3.jpg')
+    img = loadImg('images/test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
@@ -208,11 +204,10 @@ def main():
     dist, points_dict = mst.distance_matrix(centers)
     tree = mst.min_spanning_tree(dist, centers)
 
-    plotMST(boxed, tree)
+    plotMST(boxed, tree, colour=(255, 255, 255))
 
     newboxes = group_ij(newboxes, tree)
     plotBoxes(img, newboxes)
-
 
 
 if __name__ == "__main__":
