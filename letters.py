@@ -1,6 +1,6 @@
 import numpy as np
 from queue import Queue
-from mst import distance_matrix, min_spanning_tree
+import mst as MST
 
 
 """
@@ -52,8 +52,6 @@ def group_ij(boxes, mst):
     queue = Queue()
     queue.put(v)
 
-    newverticies = []
-
     # Breadth first traversal of tree
 
     while not queue.empty():
@@ -65,7 +63,6 @@ def group_ij(boxes, mst):
 
         box1 = boxes[v]
         merged_boxes.append(box1)
-        newverticies.append(vertex)
 
         if box1 in merged:
             merged_boxes.remove(box1)
@@ -96,12 +93,11 @@ def group_ij(boxes, mst):
                 merged.add(box1)
                 merged.add(box2)
 
-                newverticies.remove(vertex)
+    points = MST.calculate_centers(merged_boxes)
+    matrix, _ = MST.distance_matrix(points)
+    tree = MST.min_spanning_tree(matrix, points)
 
-    matrix, _ = distance_matrix(newverticies)
-    mst = min_spanning_tree(matrix, newverticies)
-
-    return merged_boxes, mst
+    return merged_boxes, tree
 
 
 def mark_spaces(boxes, mst, threshold=50):
@@ -110,7 +106,6 @@ def mark_spaces(boxes, mst, threshold=50):
     # Use box width / horizontal component
 
     verticies, edges, vertex_edge_mapping = mst
-    print(verticies)
     spaces = set()
 
     vertex = verticies[0]
