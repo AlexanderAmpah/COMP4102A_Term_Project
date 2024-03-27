@@ -88,8 +88,8 @@ def plotSpaces(img, mst, spaces, radius=4, title='', save=False):
     verticies, edges, vertex_edge_map = mst
     tmp = img.copy()
 
-    white = (255, 255, 255)
-    black = (0, 0, 255)
+    white = (255, 255, 255)     # Colour of space
+    black = (0, 0, 255)         # Colour of not space
 
     for u in verticies:
         for v in verticies:
@@ -218,7 +218,7 @@ def main():
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 
-    img = loadImg('images/test_boxing_3.jpg')
+    img = loadImg('images/test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     plotImg(img)
@@ -240,7 +240,7 @@ def main():
 
     plotMST(newboxed, newtree, colour=(255, 255, 255))
 
-    spaces = mark_spaces(newboxes, newtree, threshold=500)
+    spaces = mark_spaces(newboxes, newtree, threshold=80)
     plotSpaces(newboxed, newtree, spaces)
 
 

@@ -108,14 +108,14 @@ def mark_spaces(boxes, mst, threshold=50):
     verticies, edges, vertex_edge_mapping = mst
     spaces = set()
 
+    print(verticies)
+
     vertex = verticies[0]
     v = vertex_edge_mapping[vertex]
 
     discovered = {v}
     queue = Queue()
     queue.put(v)
-
-    x, _, w, _ = boxes[v]
 
     while not queue.empty():
         v = queue.get()
@@ -125,17 +125,23 @@ def mark_spaces(boxes, mst, threshold=50):
 
         for u in neighbours:
             if not u in discovered:
+
                 discovered.add(u)
                 queue.put(u)
 
-            # Compute horizontal distance between point and neighbour.
+                # Compute horizontal distance between point and neighbour.
+                # Right of bounding box to left of bounding box
+
+                x, _, w, _ = boxes[v]
+                X, _, W, _ = boxes[u]
                 
-            X, _, W, _ = boxes[u]
+                edge = (v, u)
+                dist = abs(X - x - w)
 
-            dist = abs(x + w - X)
+                print(dist)
 
-            if dist > threshold and x + w < X:
-                spaces.add( (v, u) )
+                if dist > threshold:
+                    spaces.add(edge)
 
     return spaces
 
