@@ -104,7 +104,7 @@ def group_ij(boxes, mst):
     return merged_boxes, tree
 
 
-def mark_spaces(boxes, mst, threshold=50):
+def mark_spaces(boxes, mst, threshold=80):
     # Ideally have threshold on edge distance
     # Mark those above threshold as spaces
     # Use box width / horizontal component
@@ -112,7 +112,35 @@ def mark_spaces(boxes, mst, threshold=50):
     verticies, edges, vertex_edge_mapping = mst
     spaces = set()
 
-    print(verticies)
+    # # Get all edges (indices where adjacency matrix == 1) 
+    # # Compute horizontal distances between edges using bounding boxes
+    # # Compute standard deviation and then filter based on that
+
+    # starts, ends = np.where(edges == 1)    # Each column represents the two endpoints
+    # n = len(starts)
+
+    # distances = np.zeros(n)
+
+    # for i in range(n):
+    #     start = starts[i]
+    #     end = ends[i]
+
+    #     x, _, w, _ = boxes[start]
+    #     X, _, _, _ = boxes[end]
+
+    #     distances[i] = abs(X - x - w)
+    
+    # std = np.std(distances)
+    # mean = np.mean(distances)
+
+    # for i in range(n):
+    #     start = starts[i]
+    #     end = ends[i]
+    #     dist = distances[i]
+
+    #     if dist > mean + std:
+    #         edge = (start, end)
+    #         spaces.add(edge)
 
     vertex = verticies[0]
     v = vertex_edge_mapping[vertex]
@@ -141,8 +169,6 @@ def mark_spaces(boxes, mst, threshold=50):
                 
                 edge = (v, u)
                 dist = abs(X - x - w)
-
-                print(dist)
 
                 if dist > threshold:
                     spaces.add(edge)
