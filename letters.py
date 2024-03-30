@@ -84,8 +84,12 @@ def group_ij(boxes, mst):
             dx = x2 - x1
 
             box2 = boxes[u]
+            _, y, _, _ = box1
+            _, Y, _, H = box2
 
-            if dx == 0 or abs(dy/dx) > 1:
+            # Check if neighbour box is above original box
+
+            if dx == 0 or (abs(dy/dx) > 1 and Y + H < y):
                 box = merge_boxes(box1, box2)
                 merged_boxes.append(box)
                 merged_boxes.remove(box1)
