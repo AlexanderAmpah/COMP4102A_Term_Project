@@ -1,6 +1,5 @@
-<<<<<<< HEAD
-/out
-=======
+out/
+test.py
 data/
 emnist_images/
 emnist_images/emnist_letter_0.png
@@ -10002,4 +10001,3 @@ emnist_images/emnist_letter_13499.png
 emnist_images/emnist_letter_13500.png
 emnist_images/emnist_letter_13501.png
 emnist_images/emnist_letter_13502.png
->>>>>>> 466ad5b848b4a2d8bd6ec657c4f14603ab37d4f0

@@ -11,8 +11,8 @@ from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, LeakyReLU, Av
 # TODO: Create test function
 # TODO: Create a function to predict a single image
 
-
 # Load the EMNIST dataset
+
 (ds_train, ds_test), ds_info = tfds.load(
     'emnist/letters',
     split=['train', 'test'],
