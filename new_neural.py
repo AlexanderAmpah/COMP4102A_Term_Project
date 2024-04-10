@@ -10,8 +10,9 @@ from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, LeakyReLU, Av
 from emnist import extract_training_samples, extract_test_samples
 import sklearn
 from sklearn.model_selection import train_test_split
-from input import box_letters, loadImg
-from letters import extract_letters
+from input import box_letters, filter_boxes, loadImg, plotBoxes
+from letters import extract_letters, group_ij
+import mst
 
 def load_dataset():
     # Load EMNIST letters dataset
@@ -42,6 +43,7 @@ def build_model():
     model = models.Sequential([
         layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
         layers.MaxPooling2D((2, 2)),
+        layers.Dropout(rate=0.15),
         layers.Conv2D(64, (3, 3), activation='relu'),
         layers.MaxPooling2D((2, 2)),
         layers.Conv2D(64, (3, 3), activation='relu'),
@@ -54,7 +56,7 @@ def build_model():
 
 model = build_model()
 
-# X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
 # Train model
 def train_model(model, X_train, y_train, X_val, y_val):
@@ -64,11 +66,11 @@ def train_model(model, X_train, y_train, X_val, y_val):
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-    history = model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val))
+    history = model.fit(X_train, y_train, epochs=10, batch_size=128, validation_data=(X_val, y_val))
     model.save_weights('model_weights.weights.h5')
     return history
 
-# history = train_model(model, X_train, y_train, X_val, y_val)
+history = train_model(model, X_train, y_train, X_val, y_val)
 
 # Evaluate model on test data
 def test_model(X_test, y_test):
@@ -76,7 +78,7 @@ def test_model(X_test, y_test):
     print('Test Loss: ', test_loss)
     print('Test accuracy:', test_acc*100)
 
-# test_model(X_test, y_test)
+test_model(X_test, y_test)
 
 model.load_weights('model_weights.weights.h5')
 
@@ -91,48 +93,50 @@ def preprocess_image(image):
     normalized_image = resized_image / 255.0
     return normalized_image
 
+def print_letter(predictions):
+    class_to_letter_map = {
+    0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J',
+    10: 'K', 11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S',
+    19: 'T', 20: 'U', 21: 'V', 22: 'W', 23: 'X', 24: 'Y', 25: 'Z'
+    }
+
+    predicted_class = np.argmax(predictions, axis=1)
+    predicted_letter = [class_to_letter_map[class_idx] for class_idx in predicted_class]
+    print("Predicted class:", predicted_class)
+    print("Predicted letter:", predicted_letter)
+
 def classify_image(model):
     # Preprocess the image
-    # image_path = "path_to_your_image.jpg"
-    image = loadImg('images/test_boxing_2.jpg')
-    boxed, boxes, thresh = box_letters(image)
-    letters = extract_letters(image, boxes)
-    fig, axs = plt.subplots(1, len(letters), figsize=(10, 5))
+    image = loadImg('images/test_boxing.jpg')
+    _, boxes, _ = box_letters(image)
+    boxes = filter_boxes(boxes)
+    centers = mst.calculate_centers(boxes)
+    dist, points_dict = mst.distance_matrix(centers)
+    tree = mst.min_spanning_tree(dist, centers)
 
-    for i, letter in enumerate(letters):
-        axs[i].imshow(letter, cmap='gray')
-        axs[i].set_title(f"Letter {i + 1}")
+    newboxes, newtree = group_ij(boxes, tree)
+    
+    letters = extract_letters(image, newboxes)
 
+    plt.imshow(letters[0], cmap='gray')
+    plt.title("First Letter")
+    plt.axis('off')
     plt.show()
-    # print("Shape of letters array:", letters)
-    # image = Image.open(image_path)
-    # Resize the images to match the input size expected by the model
+
     # Preprocess each letter image
-    preprocessed_images = [preprocess_image(image) for image in letters]
+    preprocessed_image = preprocess_image(letters[0])
     # Convert the list of preprocessed images to a NumPy array
-    input_data = np.array(preprocessed_images)
+    input_data = np.array(preprocessed_image)
+    input_data = np.expand_dims(input_data, axis=0)
 
     # Predict the class probabilities
     predictions = model.predict(input_data)
     
     # Get the predicted class label
-    # predicted_class = tf.argmax(predictions[0]).numpy()
-    predicted_class = tf.argmax(predictions, axis=-1)
-
-    print('Predicted class: ', predicted_class)
+    print_letter(predictions)
     
-    return predicted_class
 
 classify_image(model)
 
 
 
-def print_word(class_labels):
-    # Map class labels to letters (assuming class labels correspond to letter indices)
-    letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-
-    # Convert class labels to letters
-    word = ''.join([letters[label] for label in class_labels])
-    
-    print("Word formed by the letters:", word)
