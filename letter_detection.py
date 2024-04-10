@@ -91,26 +91,12 @@ def preprocess_image(image):
     normalized_image = resized_image / 255.0
     return normalized_image
 
-def classify_image(model):
-    # Preprocess the image
-    # image_path = "path_to_your_image.jpg"
-    image = loadImg('images/test_boxing_2.jpg')
-    boxed, boxes, thresh = box_letters(image)
-    letters = extract_letters(image, boxes)
-    fig, axs = plt.subplots(1, len(letters), figsize=(10, 5))
-
-    for i, letter in enumerate(letters):
-        axs[i].imshow(letter, cmap='gray')
-        axs[i].set_title(f"Letter {i + 1}")
-
-    plt.show()
-    # print("Shape of letters array:", letters)
-    # image = Image.open(image_path)
-    # Resize the images to match the input size expected by the model
-    # Preprocess each letter image
-    preprocessed_images = [preprocess_image(image) for image in letters]
+def classify(letter, model):
+    # Preprocess the image   
+    
+    preprocessed= preprocess_image(letter)
     # Convert the list of preprocessed images to a NumPy array
-    input_data = np.array(preprocessed_images)
+    input_data = np.array(preprocessed)
 
     # Predict the class probabilities
     predictions = model.predict(input_data)
