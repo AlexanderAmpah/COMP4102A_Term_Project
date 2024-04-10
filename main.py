@@ -6,6 +6,7 @@ import input as proc
 import mst
 import letters as l
 import cv2 as cv
+import imutils as im
 
 def main():
     if len(sys.argv) < 2:
@@ -38,30 +39,44 @@ def main():
     boxes, tree = l.group_ij(boxes, tree)
     letters = l.extract_letters(blur, boxes)
 
-    colour = proc.getBackground(img)
+    # Resize for neural network
+    # Keep aspect ratio while making image 28 x 28
+
+    resized_letters = []
 
     for letter in letters:
-        resized = colour * np.ones([28, 28])
+        resized = 255 * np.ones([28, 28])
 
         w, h = letter.shape
+        resized_letter = None
 
-        if (w <= 28 and h <= 28):
-            x = (28 - w) // 2
-            y = (28 - h) // 2
+        if w >= h:
+            resized_letter = im.resize(letter, height=28)
 
-            resized[y: y + h, x: x + w] = letter
+        else:
+            resized_letter = im.resize(letter, width=28)
 
-        elif (w < 28):
-            r = 28 / h
-            dim = (w * r, 28)
+        # Threshold the letter image
+        _, thresh = cv.threshold(resized_letter, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        
+        w_prime, h_prime = thresh.shape
+        x = (28 - w_prime) // 2
+        y = (28 - h_prime) // 2
 
-        cv.resize()
+        resized[x: x + w_prime, y: y + h_prime] = thresh
+        resized_letters.append(resized)
+
+
+    for letter in resized_letters:
+        print(letter.shape)
+
+        proc.plotImg(letter)
         
 
-    X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
-    model = build_model()
-    history = train_model(model, X_train, y_train, X_val, y_val)
-    test_model(X_test, y_test)
+    # X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+    # model = build_model()
+    # history = train_model(model, X_train, y_train, X_val, y_val)
+    # test_model(X_test, y_test)
 
 
 if __name__ == "__main__":

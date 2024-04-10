@@ -109,7 +109,7 @@ def classify(letter, model):
     
     return predicted_class
 
-classify_image(model)
+# classify_image(model)
 
 
 
