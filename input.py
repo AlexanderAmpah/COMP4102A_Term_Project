@@ -246,7 +246,7 @@ def main():
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 
-    img = loadImg('images/test_boxing.jpg')
+    img = loadImg('images/test_boxing_20.jpg')
     boxed, boxes, thresh = box_letters(img)
 
     img = blur(img)

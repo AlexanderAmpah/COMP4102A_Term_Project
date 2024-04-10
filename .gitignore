@@ -3,6 +3,8 @@
 test.py
 =======
 neural_net_func.py
+new_neural.py
+gzip
 data/
 emnist_images/
 emnist_images/emnist_letter_0.png
