@@ -1,4 +1,5 @@
 from tkinter import Image
+from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
 import keras
@@ -9,6 +10,8 @@ from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, LeakyReLU, Av
 from emnist import extract_training_samples, extract_test_samples
 import sklearn
 from sklearn.model_selection import train_test_split
+from input import box_letters, loadImg
+from letters import extract_letters
 
 def load_dataset():
     # Load EMNIST letters dataset
@@ -51,7 +54,7 @@ def build_model():
 
 model = build_model()
 
-X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+# X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
 # Train model
 def train_model(model, X_train, y_train, X_val, y_val):
@@ -62,9 +65,10 @@ def train_model(model, X_train, y_train, X_val, y_val):
               metrics=['accuracy'])
 
     history = model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val))
+    model.save_weights('model_weights.weights.h5')
     return history
 
-history = train_model(model, X_train, y_train, X_val, y_val)
+# history = train_model(model, X_train, y_train, X_val, y_val)
 
 # Evaluate model on test data
 def test_model(X_test, y_test):
@@ -72,20 +76,63 @@ def test_model(X_test, y_test):
     print('Test Loss: ', test_loss)
     print('Test accuracy:', test_acc*100)
 
-test_model(X_test, y_test)
+# test_model(X_test, y_test)
 
-def classify_image(model, image):
+model.load_weights('model_weights.weights.h5')
+
+def preprocess_image(image):
+    # Ensure the image has 3 or 4 dimensions
+    if len(image.shape) == 2:
+        # Add a channel dimension if the image has 2 dimensions
+        image = np.expand_dims(image, axis=-1)
+    # Resize the image to match the input size required by the model
+    resized_image = tf.image.resize(image, (28, 28))
+    # Normalize pixel values
+    normalized_image = resized_image / 255.0
+    return normalized_image
+
+def classify_image(model):
     # Preprocess the image
-    image_path = "path_to_your_image.jpg"
-    image = Image.open(image_path)
-    image = tf.image.resize(image, (28, 28))  # Resize the image to match the input shape of the model
-    image = tf.expand_dims(image, axis=0)  # Add batch dimension
-    image = tf.cast(image, tf.float32) / 255.  # Normalize the image
+    # image_path = "path_to_your_image.jpg"
+    image = loadImg('images/test_boxing_2.jpg')
+    boxed, boxes, thresh = box_letters(image)
+    letters = extract_letters(image, boxes)
+    fig, axs = plt.subplots(1, len(letters), figsize=(10, 5))
+
+    for i, letter in enumerate(letters):
+        axs[i].imshow(letter, cmap='gray')
+        axs[i].set_title(f"Letter {i + 1}")
+
+    plt.show()
+    # print("Shape of letters array:", letters)
+    # image = Image.open(image_path)
+    # Resize the images to match the input size expected by the model
+    # Preprocess each letter image
+    preprocessed_images = [preprocess_image(image) for image in letters]
+    # Convert the list of preprocessed images to a NumPy array
+    input_data = np.array(preprocessed_images)
 
     # Predict the class probabilities
-    predictions = model.predict(image)
+    predictions = model.predict(input_data)
     
     # Get the predicted class label
-    predicted_class = tf.argmax(predictions[0]).numpy()
+    # predicted_class = tf.argmax(predictions[0]).numpy()
+    predicted_class = tf.argmax(predictions, axis=-1)
+
+    print('Predicted class: ', predicted_class)
     
     return predicted_class
+
+classify_image(model)
+
+
+
+def print_word(class_labels):
+    # Map class labels to letters (assuming class labels correspond to letter indices)
+    letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+
+    # Convert class labels to letters
+    word = ''.join([letters[label] for label in class_labels])
+    
+    print("Word formed by the letters:", word)
