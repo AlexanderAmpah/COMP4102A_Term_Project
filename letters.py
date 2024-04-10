@@ -1,6 +1,8 @@
 import numpy as np
 from queue import Queue
 import mst as MST
+import imutils as im
+import cv2 as cv
 
 """
 Combines two boxes into a single box.
@@ -83,12 +85,13 @@ def group_ij(boxes, mst):
             dx = x2 - x1
 
             box2 = boxes[u]
-            _, y, _, _ = box1
-            _, Y, _, H = box2
+            x, y, w, h = box1
+            X, Y, W, H = box2
 
             # Check if neighbour box is above original box
+            # Check if neighbour box intersects original box along x axis
 
-            if dx == 0 or (abs(dy/dx) > 1 and Y + H < y):
+            if dx == 0 or (abs(dy/dx) > 1 and (Y + H < y or x + w > X)):
                 box = merge_boxes(box1, box2)
                 merged_boxes.append(box)
                 merged_boxes.remove(box1)
@@ -175,6 +178,14 @@ def mark_spaces(boxes, mst, threshold=80):
     return spaces
 
 
+"""
+Extracts the letters from an image using their bounding boxes.
+Args:
+    img:    Grayscale image.
+    boxes:  Bounding boxes of letters of the form (x, y, w, h)
+Returns:
+    Thresholded letters of size 28 x 28 using OTSU.
+"""
 def extract_letters(img, boxes):
     letters = []
 
@@ -185,4 +196,30 @@ def extract_letters(img, boxes):
         
         letters.append(letter)
 
-    return letters
+    # 
+
+    resized_letters = []
+
+    for letter in letters:
+        resized = 255 * np.ones([28, 28])
+
+        w, h = letter.shape
+        resized_letter = None
+
+        if w >= h:
+            resized_letter = im.resize(letter, height=28)
+
+        else:
+            resized_letter = im.resize(letter, width=28)
+
+        # Threshold the letter image
+        _, thresh = cv.threshold(resized_letter, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        
+        w_prime, h_prime = thresh.shape
+        x = (28 - w_prime) // 2
+        y = (28 - h_prime) // 2
+
+        resized[x: x + w_prime, y: y + h_prime] = thresh
+        resized_letters.append(resized)
+
+    return resized_letters
