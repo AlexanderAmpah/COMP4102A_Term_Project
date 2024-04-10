@@ -125,6 +125,24 @@ def loadImg(filename):
     
     return img
 
+"""
+Gets background colour of an image.
+Args:
+    img:    Grayscale image.
+Returns:
+    colour: Background colour (approximate)
+"""
+def getBackground(img):
+    blur = cv.medianBlur(img, 5)
+    blur = cv.blur(blur, (11, 11))
+
+    # Pencil / pen is darker than the paper
+    # Average blur a ton, then get the max value (closest to white)
+
+    colour = np.max(blur)
+
+    return colour
+
 
 """
 Checks if one box contains the other.
