@@ -2,7 +2,6 @@ import numpy as np
 from queue import Queue
 import mst as MST
 
-
 """
 Combines two boxes into a single box.
 Args:
@@ -179,8 +178,11 @@ def mark_spaces(boxes, mst, threshold=80):
 def extract_letters(img, boxes):
     letters = []
 
-    for x, y, w, h in boxes:
-        letter = img[x:x + w, y:y + h]
+    for box in boxes:
+        x, y, w, h = box
+
+        letter = img[y: y + h, x: x + w]
+        
         letters.append(letter)
 
     return letters

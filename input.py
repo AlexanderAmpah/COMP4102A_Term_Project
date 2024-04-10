@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import mst
-from letters import group_ij, mark_spaces
+from letters import group_ij, mark_spaces, extract_letters
 
 """
 Plots image.
@@ -143,6 +143,18 @@ def overlaps(box1, box2):
     
     return False
 
+"""
+Blurs image first with Median blur then with Gaussian blur.
+Args:
+    img:    Grayscale image.
+Returns:
+    blur:   Blurred image.
+"""
+def blur(img):
+    blur = cv.medianBlur(img, 5)
+    blur = cv.GaussianBlur(img, (7, 7), 3)
+
+    return blur
 
 """
 Boxes in individual letters i.e., blobs
@@ -157,9 +169,7 @@ def box_letters(img):
     n, m = img.shape
     tmp = img.copy()
 
-    blur = cv.medianBlur(img, 5)
-    blur = cv.GaussianBlur(img, (17, 17), 6)
-    _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    _, thresh = cv.threshold(img, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     boxes = []
@@ -218,12 +228,14 @@ def main():
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 
-    img = loadImg('images/test_boxing_5.jpg')
+    img = loadImg('images/test_boxing.jpg')
     boxed, boxes, thresh = box_letters(img)
 
+    img = blur(img)
+
     plotImg(img)
-    plotImg(boxed)
-    plotImg(thresh)
+    # plotImg(boxed)
+    # plotImg(thresh)
 
     boxes = filter_boxes(boxes)
 
@@ -233,15 +245,20 @@ def main():
     dist, points_dict = mst.distance_matrix(centers)
     tree = mst.min_spanning_tree(dist, centers)
 
-    plotMST(boxed, tree, colour=(255, 255, 255))
+    # plotMST(boxed, tree, colour=(255, 255, 255))
 
     newboxes, newtree = group_ij(boxes, tree)
     newboxed = plotBoxes(img, newboxes)
 
-    plotMST(newboxed, newtree, colour=(255, 255, 255))
+    # plotMST(newboxed, newtree, colour=(255, 255, 255))
 
     spaces = mark_spaces(newboxes, newtree, threshold=80)
-    plotSpaces(newboxed, newtree, spaces)
+    # plotSpaces(newboxed, newtree, spaces)
+
+    letters = extract_letters(img, newboxes)
+
+    for letter in letters:
+        plotImg(letter)
 
 
 if __name__ == "__main__":

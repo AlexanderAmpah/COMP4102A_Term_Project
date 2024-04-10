@@ -1,156 +1,138 @@
 from tkinter import Image
+from matplotlib import pyplot as plt
 import numpy as np
-import emnist
 import tensorflow as tf
-import tensorflow_datasets as tfds
-from tensorflow import keras
+import keras
 from keras import layers, models
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, LeakyReLU, AveragePooling2D
-
-# TODO: Create dataset load function
-# TODO: Create train function
-# TODO: Create test function
-# TODO: Create a function to predict a single image
-
+from emnist import extract_training_samples, extract_test_samples
+import sklearn
+from sklearn.model_selection import train_test_split
+from input import box_letters, loadImg
+from letters import extract_letters
 
 def load_dataset():
-    #Load the EMNIST dataset
-    ds_train, ds_test, ds_info = tfds.load(
-        'emnist/letters',
-        split=['train', 'test'],
-        shuffle_files=True,
-        as_supervised=True,
-        with_info=True,
-    )
+    # Load EMNIST letters dataset
+    X_train, y_train = extract_training_samples('letters')
+    X_test, y_test = extract_test_samples('letters')
 
-    def normalize_img(image, label):
-        """Normalizes images: `uint8` -> `float32`."""
-        return tf.cast(image, tf.float32) / 255., label
+    # Filter out labels >= 26
+    valid_indices_train = np.where(y_train < 26)
+    valid_indices_test = np.where(y_test < 26)
+    X_train, y_train = X_train[valid_indices_train], y_train[valid_indices_train]
+    X_test, y_test = X_test[valid_indices_test], y_test[valid_indices_test]
 
-    ds_train = ds_train.map(
-        normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_train = ds_train.cache()
-    ds_train = ds_train.shuffle(ds_info.splits['train'].num_examples)
-    ds_train = ds_train.batch(128)
-    ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
+    # Normalize pixel values
+    X_train = X_train.astype('float32') / 255.0
+    X_test = X_test.astype('float32') / 255.0
 
-    ds_test = ds_test.map(
-        normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
-    ds_test = ds_test.batch(128)
-    ds_test = ds_test.cache()
-    ds_test = ds_test.prefetch(tf.data.AUTOTUNE)
+    # Reshape data to fit CNN input shape
+    X_train = np.expand_dims(X_train, axis=-1)
+    X_test = np.expand_dims(X_test, axis=-1)
 
-    return ds_train, ds_test, ds_info
+    # Split training data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=42)
 
-def load_ds():
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
-    # Load EMNIST dataset
-    emnist_train = emnist.extract_training_samples('letters')
-    emnist_test = emnist.extract_test_samples('letters')
-
-    # Extract images and labels
-    X_train, y_train = emnist_train
-    X_test, y_test = emnist_test
-
-    # Reshape images for TensorFlow model input
-    X_train = X_train.reshape(X_train.shape[0], 28, 28, 1).astype('float32') / 255
-    X_test = X_test.reshape(X_test.shape[0], 28, 28, 1).astype('float32') / 255
-
-    y_train = tf.cast(y_train, dtype=tf.int32)
-    y_test = tf.cast(y_test, dtype=tf.int32)
-
-    # Define batch size
-    batch_size = 128
-
-    # Create TensorFlow Dataset objects for training and testing
-    ds_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    ds_train = ds_train.shuffle(buffer_size=X_train.shape[0])  # Shuffle the dataset
-    ds_train = ds_train.batch(batch_size)  # Batch the dataset
-    ds_train = ds_train.prefetch(buffer_size=tf.data.AUTOTUNE)  # Prefetch data for efficiency
-
-    ds_test = tf.data.Dataset.from_tensor_slices((X_test, y_test))
-    ds_test = ds_test.batch(batch_size)  # Batch the dataset
-    ds_test = ds_test.prefetch(buffer_size=tf.data.AUTOTUNE)  # Prefetch data for efficiency
-    
-    return ds_train, ds_test
-
-def build_model(input_shape=(28, 28, 1)):
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(filters=473, kernel_size=(3, 3), activation=tf.nn.relu, input_shape=input_shape),
-        tf.keras.layers.AveragePooling2D((2, 2)),
-        tf.keras.layers.Dropout(rate=0.15),
-        tf.keras.layers.Conv2D(filters=238, kernel_size=(3, 3), activation=tf.nn.relu),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(rate=0.20),
-        tf.keras.layers.Conv2D(filters=133, kernel_size=(3, 3), activation=tf.nn.relu),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(rate=0.10),
-        tf.keras.layers.Conv2D(filters=387, kernel_size=(3, 3), activation=tf.nn.relu),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(rate=0.10),
-        tf.keras.layers.Conv2D(filters=187, kernel_size=(5, 5), activation=tf.nn.elu),
-        tf.keras.layers.Dropout(rate=0.50),
-        tf.keras.layers.Dense(313, activation=tf.nn.relu),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(rate=0.20),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(252, activation=tf.nn.elu),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(rate=0.20),
-        tf.keras.layers.Dense(37)
+def build_model():
+    # Build CNN model
+    model = models.Sequential([
+        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.Flatten(),
+        layers.Dense(64, activation='relu'),
+        layers.Dense(26, activation='softmax')  # 26 classes for letters
     ])
-
     return model
 
-def train_model(model, ds_train, ds_test, epochs=10):
-    # Compile the model
-    model.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
 
-    # Train the model
-    history = model.fit(
-        ds_train,
-        epochs=epochs,
-        validation_data=ds_test
-    )
-    
+model = build_model()
+
+# X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+
+# Train model
+def train_model(model, X_train, y_train, X_val, y_val):
+
+    # Compile model
+    model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+    history = model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val))
+    model.save_weights('model_weights.weights.h5')
     return history
 
-def test_model(model, ds_test):
-    # Evaluate the model
-    test_loss, test_accuracy = model.evaluate(ds_test)
-    print(f'Test loss: {test_loss}')
-    print(f'Test accuracy: {test_accuracy}')
+# history = train_model(model, X_train, y_train, X_val, y_val)
 
-def classify_image(model, image):
+# Evaluate model on test data
+def test_model(X_test, y_test):
+    test_loss, test_acc = model.evaluate(X_test, y_test)
+    print('Test Loss: ', test_loss)
+    print('Test accuracy:', test_acc*100)
+
+# test_model(X_test, y_test)
+
+model.load_weights('model_weights.weights.h5')
+
+def preprocess_image(image):
+    # Ensure the image has 3 or 4 dimensions
+    if len(image.shape) == 2:
+        # Add a channel dimension if the image has 2 dimensions
+        image = np.expand_dims(image, axis=-1)
+    # Resize the image to match the input size required by the model
+    resized_image = tf.image.resize(image, (28, 28))
+    # Normalize pixel values
+    normalized_image = resized_image / 255.0
+    return normalized_image
+
+def classify_image(model):
     # Preprocess the image
-    image_path = "path_to_your_image.jpg"
-    image = Image.open(image_path)
-    image = tf.image.resize(image, (28, 28))  # Resize the image to match the input shape of the model
-    image = tf.expand_dims(image, axis=0)  # Add batch dimension
-    image = tf.cast(image, tf.float32) / 255.  # Normalize the image
+    # image_path = "path_to_your_image.jpg"
+    image = loadImg('images/test_boxing_2.jpg')
+    boxed, boxes, thresh = box_letters(image)
+    letters = extract_letters(image, boxes)
+    fig, axs = plt.subplots(1, len(letters), figsize=(10, 5))
+
+    for i, letter in enumerate(letters):
+        axs[i].imshow(letter, cmap='gray')
+        axs[i].set_title(f"Letter {i + 1}")
+
+    plt.show()
+    # print("Shape of letters array:", letters)
+    # image = Image.open(image_path)
+    # Resize the images to match the input size expected by the model
+    # Preprocess each letter image
+    preprocessed_images = [preprocess_image(image) for image in letters]
+    # Convert the list of preprocessed images to a NumPy array
+    input_data = np.array(preprocessed_images)
 
     # Predict the class probabilities
-    predictions = model.predict(image)
+    predictions = model.predict(input_data)
     
     # Get the predicted class label
-    predicted_class = tf.argmax(predictions[0]).numpy()
+    # predicted_class = tf.argmax(predictions[0]).numpy()
+    predicted_class = tf.argmax(predictions, axis=-1)
+
+    print('Predicted class: ', predicted_class)
     
     return predicted_class
 
-# Load dataset
-#ds_train, ds_test = load_dataset()
-ds_train, ds_test = load_ds()
-
-# Build the model
-model = build_model()
-
-# Train the model
-history = train_model(model, ds_train, ds_test, epochs=10)
+classify_image(model)
 
 
-# Test the model
-test_model(model, ds_test)
+
+def print_word(class_labels):
+    # Map class labels to letters (assuming class labels correspond to letter indices)
+    letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+
+    # Convert class labels to letters
+    word = ''.join([letters[label] for label in class_labels])
+    
+    print("Word formed by the letters:", word)
