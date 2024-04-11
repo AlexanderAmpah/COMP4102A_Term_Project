@@ -121,15 +121,11 @@ def classify(model, letter):
                'v', 'w', 'x', 'y', 'z']
 
     # Preprocess each letter image
-
     preprocessed_letter = preprocess_image(letter)
     # preprocessed_image = tf.where(preprocessed_image >= 0.6, 1.0, 0.0)
 
-    # print('Letter shape ', preprocessed_image.shape)
-    # Convert the list of preprocessed images to a NumPy array
-
     
-
+    # Convert the list of preprocessed images to a NumPy array
     input_data = np.array(preprocessed_letter)
     input_data = np.expand_dims(input_data, axis=0)
 
