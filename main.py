@@ -88,6 +88,9 @@ def main():
     dist, _ = mst.distance_matrix(centers)
     tree = mst.min_spanning_tree(dist, centers)
 
+    # boxed = proc.plotBoxes(blur, boxes)
+    # proc.plotMST(boxed, tree, colour=(255, 255, 255))
+
     boxes, tree = l.group_ij(boxes, tree)
     letters = l.extract_letters(blur, boxes)
 
