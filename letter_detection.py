@@ -1,3 +1,6 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from tkinter import Image
 import cv2
 from matplotlib import pyplot as plt
