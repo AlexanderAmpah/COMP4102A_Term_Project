@@ -12,15 +12,11 @@ GitHub Repo:    https://github.com/AlexanderAmpah/COMP4102A_Term_Project
 
 To run the code the code first enter "python main.py", then filepath of the image "images/test_boxing.jpg", followed by "-l" to load the model weights. Model weights files must end with a ".weights.h5" extension.
 
-Example: "python main.py images/test_boxing.jpg -l model_weights2.weights.h5" 
+Example: "python main.py images/test_boxing_30.jpg -l model_weights2.weights.h5" 
 
 To train the model run: "python main.py images/test_boxing.jpg --train"
 
-To save the model weights after training run: "python main.py images/test_boxing.jpg --train -s model_weights.weights.h5"
-
-To test the model run: "python main.py images/test_boxing.jpg --train -l model_weights2.weights.h5"
-
-If you want to train and test the neural network the command should look like this:
+If you want to train or test the neural network while saving the weights the commands should look like this:
 
 Train: "python main.py images/test_boxing_27.jpg ---train -s model_weights2.weights.h5"
 Test: "python main.py images/test_boxing_27.jpg ---test -l model_weights2.weights.h5"
