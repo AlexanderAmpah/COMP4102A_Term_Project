@@ -117,16 +117,24 @@ def main():
 
         # TODO: Plot test accuracy and loss over epochs
 
+    message = ''
+    indices = []
 
     for image in letters:
         letter, index = detector.classify(model, image)
 
         proc_image = detector.preprocess_image(image)
 
-        proc.plotImg(image, title=letter)
-        proc.plotImg(proc_image, title=f'How the model sees {letter}')
+        proc.plotImg(image, title='Before Preprocessing for the Model')
+        proc.plotImg(proc_image, title='After Preprocessing for the Model')
 
-        print(index, letter)
+        print(letter, index)
+
+        message += letter
+        indices.append(index)
+
+    print('Parsed Message:', message)
+    print('Parsed Letter Indices:', indices)
 
 
 if __name__ == "__main__":
