@@ -196,7 +196,10 @@ def extract_letters(img, boxes):
         
         letters.append(letter)
 
-    # 
+    # Resize letter images to 28 x 28 while preserving aspect ratio
+    # Resize a side to 28 pixels but keep aspect ratio
+    # Threshold the image using OTSU
+    # Insert threshold image into white 28 x 28 image
 
     # resized_letters = []
 
