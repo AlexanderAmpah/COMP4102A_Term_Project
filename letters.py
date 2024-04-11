@@ -198,28 +198,29 @@ def extract_letters(img, boxes):
 
     # 
 
-    resized_letters = []
+    # resized_letters = []
 
-    for letter in letters:
-        resized = 255 * np.ones([28, 28])
+    # for letter in letters:
+    #     resized = 255 * np.ones([28, 28])
 
-        w, h = letter.shape
-        resized_letter = None
+    #     w, h = letter.shape
+    #     resized_letter = None
 
-        if w >= h:
-            resized_letter = im.resize(letter, height=28)
+    #     if w >= h:
+    #         resized_letter = im.resize(letter, height=28)
 
-        else:
-            resized_letter = im.resize(letter, width=28)
+    #     else:
+    #         resized_letter = im.resize(letter, width=28)
 
-        # Threshold the letter image
-        _, thresh = cv.threshold(resized_letter, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    #     # Threshold the letter image
+    #     _, thresh = cv.threshold(resized_letter, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
         
-        w_prime, h_prime = thresh.shape
-        x = (28 - w_prime) // 2
-        y = (28 - h_prime) // 2
+    #     w_prime, h_prime = thresh.shape
+    #     x = (28 - w_prime) // 2
+    #     y = (28 - h_prime) // 2
 
-        resized[x: x + w_prime, y: y + h_prime] = thresh
-        resized_letters.append(resized)
+    #     resized[x: x + w_prime, y: y + h_prime] = thresh
+    #     resized_letters.append(resized)
 
-    return resized_letters
+    # return resized_letters
+    return letters

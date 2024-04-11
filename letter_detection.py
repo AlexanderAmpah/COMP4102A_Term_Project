@@ -1,7 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-from tkinter import Image
+from PIL import Image
+# from tkinter import Image
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
@@ -16,6 +16,7 @@ import sklearn
 from sklearn.model_selection import train_test_split
 from input import blur, box_letters, filter_boxes, loadImg
 from letters import extract_letters, group_ij
+import imutils as im
 import mst
 
 def load_dataset():
@@ -96,7 +97,8 @@ def preprocess_image(image):
         # Add a channel dimension if the image has 2 dimensions
         image = np.expand_dims(image, axis=-1)
     # Resize the image to match the input size required by the model
-    resized_image = tf.image.resize(image, (28, 28))
+    resized_image = tf.image.resize_with_pad(image, 28, 28)
+
     # Normalize pixel values
     normalized_image = resized_image / 255.0
     return normalized_image
@@ -116,8 +118,8 @@ def print_letter(predictions):
 
 def classify_image(model, image):
     
-    # letter = cv2.threshold(letters[1], 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU )
     letter = blur(image)
+    # letter = image
     
     plt.imshow(letter, cmap='gray')
     plt.title("First Letter")
@@ -126,6 +128,7 @@ def classify_image(model, image):
     letter = cv2.bitwise_not(letter)
     # Preprocess each letter image
     preprocessed_image = preprocess_image(letter)
+    preprocessed_image = tf.where(preprocessed_image >= 0.6, 1.0, 0.0)
     # print('Letter shape ', preprocessed_image.shape)
     plt.imshow(preprocessed_image, cmap='gray')
     plt.title("First Letter")
@@ -143,7 +146,7 @@ def classify_image(model, image):
 
 
 
-image = loadImg('images/test_boxing_11.jpg')
+image = loadImg('images/test_boxing_14.jpg')
 _, boxes, _ = box_letters(image)
 boxes = filter_boxes(boxes)
 centers = mst.calculate_centers(boxes)
