@@ -1,5 +1,3 @@
-import numpy as np
-import cv2 as cv
 from scipy.spatial.distance import cdist
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree

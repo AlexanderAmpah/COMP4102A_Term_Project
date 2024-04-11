@@ -1,16 +1,10 @@
-from tkinter import Image
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
-import keras
 from keras import layers, models
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, LeakyReLU, AveragePooling2D
 from emnist import extract_training_samples, extract_test_samples
-import sklearn
 from sklearn.model_selection import train_test_split
-from input import blur, box_letters, filter_boxes, loadImg, plotBoxes
+from input import blur, box_letters, filter_boxes, loadImg
 from letters import extract_letters, group_ij
 import mst
 

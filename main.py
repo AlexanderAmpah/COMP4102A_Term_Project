@@ -1,30 +1,83 @@
-import sys
 import os
-import numpy as np
-import letter_detection as model
+import argparse
+import letter_detection as detector
 import input as proc
 import mst
 import letters as l
-import cv2 as cv
+
 
 def main():
-    if len(sys.argv) < 2:
-        print('Error! Filename not specified.')
 
-        return
+    def is_valid_file(parser, filename):
+        if not os.path.isfile(filename):
+            parser.error(f'The file: "{filename}" does not exist!')
 
-    path = sys.argv[1]
+        else:
+            return filename
+        
+        
+    def is_valid_save(parser, model, load=True):
+        if not os.path.isfile(model) and load:
+            parser.error(f'The file: "{model}" does not exist!')
 
-    # Check if filepath is a file
+        elif len(model) < 11 or model[-11:] != '.weights.h5':
+            parser.error(f'The file: "{model}" is not the proper extension! Must end with ".weights.h5".')
 
-    if not os.path.isfile(path):
-        print(f'Error! Filename: "{path}" does not exist.')
+        else:
+            return model
+        
 
-        return
+    parser = argparse.ArgumentParser(
+        prog='handToText',
+        description="Reads handwritten text from an image file. Handwritten text must be well lit and printed. Adequate spacing must be between the letters such that the letters are neither connected nor is one letter 'over' another.",
+        usage='%(prog)s [filename] [--model] [model params file]', 
+        epilog="By Ainan Kashif, Oko Ampah, and Emmanuel Richard. For COMP 4102A in Winter semester 2024."
+    )
+
+    parser.add_argument(
+        'path', 
+        help="File path to handwritten image. Handwritten text must be well lit and printed. Adequate spacing must be between the letters such that the letters are neither connected nor is one letter 'over' another.", 
+        metavar='image', 
+        type=lambda f: is_valid_file(parser, f)
+    )
+
+    parser.add_argument(
+        '--train', 
+        action='store_true', 
+        help='Trains model.'
+    )
+
+    parser.add_argument(
+        '--test', 
+        action='store_true', 
+        help='Tests model.'
+    )
+
+    parser.add_argument(
+        '-l', 
+        '--load', 
+        dest='loadfile', 
+        help='Model parameters loadfile. Must be ".weights.h5" extension.',
+        type=lambda f: is_valid_save(parser, f, load=True) 
+    )
+
+    parser.add_argument(
+        '-s', 
+        '--save', 
+        dest='savefile', 
+        help='Model parameters savefile. Must be ".weights.h5" extension.', 
+        type=lambda f: is_valid_save(parser, f, load=False)
+    )
 
     # use image first blur, then get boxes, then compute mst, then merge i and j, then extract letters
     # To preserve aspect ratio, resize so height or width is 28 pixels in length
     # copy image to a 28 x 28 array prefilled with background colour values
+
+    args = parser.parse_args()
+    path = args.path
+
+    savefile = args.savefile
+    loadfile = args.loadfile
 
     img = proc.loadImg(path)
     blur = proc.blur(img)
@@ -41,16 +94,39 @@ def main():
     # Resize for neural network
     # Keep aspect ratio while making image 28 x 28
 
-    for letter in letters:
-        print(letter.shape)
+    model = detector.build_model()
 
-        proc.plotImg(letter)
-        
+    if args.train:
+        train, test, val = detector.load_dataset()  # X and y pairs
+        history = detector.train_model(model, train, val)
 
-    X_train, y_train, X_val, y_val, X_test, y_test = model.load_dataset()
-    m = model.build_model()
-    history = model.train_model(model, X_train, y_train, X_val, y_val)
-    model.test_model(X_test, y_test)
+        if not savefile is None:
+            detector.save_model(model, savefile)
+
+        # TODO: Plot train accuracy and loss over epochs using history object
+
+    elif not loadfile is None:
+        detector.load_model(model, loadfile)
+
+    else:
+        parser.error('Error! Loadfile or train option not specified.')
+
+    if args.test:
+        train, test, val = detector.load_dataset()
+        loss, acc = detector.test_model(model, test)
+
+        # TODO: Plot test accuracy and loss over epochs
+
+
+    for image in letters:
+        letter, index = detector.classify(model, image)
+
+        proc_image = detector.preprocess_image(image)
+
+        proc.plotImg(image, title=letter)
+        proc.plotImg(proc_image, title=f'How the model sees {letter}')
+
+        print(index, letter)
 
 
 if __name__ == "__main__":

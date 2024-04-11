@@ -1,8 +1,6 @@
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
-import mst
-from letters import group_ij, mark_spaces, extract_letters
 
 """
 Plots image.
@@ -242,7 +240,10 @@ def filter_boxes(boxes):
 
 
 def main():
-    # Testing
+    import mst
+    from letters import group_ij, mark_spaces, extract_letters
+
+    # For Testing
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 

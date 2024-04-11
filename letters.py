@@ -226,4 +226,5 @@ def extract_letters(img, boxes):
     #     resized_letters.append(resized)
 
     # return resized_letters
+    
     return letters
