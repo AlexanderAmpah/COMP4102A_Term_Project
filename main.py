@@ -126,7 +126,7 @@ def main():
         proc.plotImg(image, title=letter)
         proc.plotImg(proc_image, title=f'How the model sees {letter}')
 
-        print(index, letter)
+        print('Predicted class: ', index,'\nPredicted letter: ', letter)
 
 
 if __name__ == "__main__":
