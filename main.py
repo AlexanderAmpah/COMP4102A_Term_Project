@@ -1,8 +1,11 @@
 import sys
 import os
 import numpy as np
-from letter_detection import load_dataset, build_model, train_model, test_model
-from input import getBackground
+import letter_detection as model
+import input as proc
+import mst
+import letters as l
+import cv2 as cv
 
 def main():
     if len(sys.argv) < 2:
@@ -10,12 +13,12 @@ def main():
 
         return
 
-    image = sys.argv[1]
+    path = sys.argv[1]
 
     # Check if filepath is a file
 
-    if not os.path.isfile(image):
-        print(f'Error! Filename: "{image}" does not exist.')
+    if not os.path.isfile(path):
+        print(f'Error! Filename: "{path}" does not exist.')
 
         return
 
@@ -23,15 +26,31 @@ def main():
     # To preserve aspect ratio, resize so height or width is 28 pixels in length
     # copy image to a 28 x 28 array prefilled with background colour values
 
-    colour = getBackground(image)
-    resize_letter = colour * np.ones([28, 28])
+    img = proc.loadImg(path)
+    blur = proc.blur(img)
+    _, boxes, _ = proc.box_letters(blur)
+    boxes = proc.filter_boxes(boxes)
 
-    
+    centers = mst.calculate_centers(boxes)
+    dist, _ = mst.distance_matrix(centers)
+    tree = mst.min_spanning_tree(dist, centers)
 
-    X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
-    model = build_model()
-    history = train_model(model, X_train, y_train, X_val, y_val)
-    test_model(X_test, y_test)
+    boxes, tree = l.group_ij(boxes, tree)
+    letters = l.extract_letters(blur, boxes)
+
+    # Resize for neural network
+    # Keep aspect ratio while making image 28 x 28
+
+    for letter in letters:
+        print(letter.shape)
+
+        proc.plotImg(letter)
+        
+
+    # X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+    # model = build_model()
+    # history = train_model(model, X_train, y_train, X_val, y_val)
+    # test_model(X_test, y_test)
 
 
 if __name__ == "__main__":
