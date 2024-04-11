@@ -246,13 +246,13 @@ def main():
 
     # test_boxing_4, 5, 6, 7 Do not work since there is overlap 
 
-    img = loadImg('images/test_boxing_3.jpg')
+    img = loadImg('images/test_boxing_7.jpg')
     img = blur(img)
     boxed, boxes, thresh = box_letters(img)
 
-    # plotImg(img)
-    # plotImg(boxed)
-    # plotImg(thresh)
+    plotImg(img)
+    plotImg(boxed)
+    plotImg(thresh)
 
     boxes = filter_boxes(boxes)
 
@@ -262,12 +262,12 @@ def main():
     dist, points_dict = mst.distance_matrix(centers)
     tree = mst.min_spanning_tree(dist, centers)
 
-    # plotMST(boxed, tree, colour=(255, 255, 255))
+    plotMST(boxed, tree, colour=(255, 255, 255))
 
     newboxes, newtree = group_ij(boxes, tree)
     newboxed = plotBoxes(img, newboxes)
 
-    # plotMST(newboxed, newtree, colour=(255, 255, 255))
+    plotMST(newboxed, newtree, colour=(255, 255, 255))
 
     spaces = mark_spaces(newboxes, newtree, threshold=80)
     plotSpaces(newboxed, newtree, spaces)
@@ -275,8 +275,7 @@ def main():
     letters = extract_letters(img, newboxes)
 
     for letter in letters:
-        _, tmp = cv.threshold(letter, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-        plotImg(tmp)
+        plotImg(letter)
 
 
 if __name__ == "__main__":
