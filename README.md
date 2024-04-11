@@ -6,7 +6,7 @@ then enter the model weights file "model_weights2.weights.h5"
 
 All together the command should look like this "python main.py images/test_boxing_27.jpg -l model_weights2.weights.h5" 
 
-If you want to train and test the neural network yhe command should look like this "images/test_boxing_27 —train -s model_weights2.weights.h5 -test"
+If you want to train and test the neural network, the command should look like this "images/test_boxing_27 —train -s model_weights2.weights.h5 -test"
 
 For the neural network to do its best work handwritten text must be well lit and printed. 
 Adequate spacing must be between the letters such that the letters are neither connected nor is one letter 'over' another.
