@@ -47,10 +47,10 @@ def main():
         proc.plotImg(letter)
         
 
-    # X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
-    # model = build_model()
-    # history = train_model(model, X_train, y_train, X_val, y_val)
-    # test_model(X_test, y_test)
+    X_train, y_train, X_val, y_val, X_test, y_test = model.load_dataset()
+    m = model.build_model()
+    history = model.train_model(model, X_train, y_train, X_val, y_val)
+    model.test_model(X_test, y_test)
 
 
 if __name__ == "__main__":

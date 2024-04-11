@@ -116,8 +116,7 @@ def print_letter(predictions):
 
 def classify_image(model, image):
     
-    # letter = cv2.threshold(letters[1], 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU )
-    letter = blur(image)
+    letter = cv2.threshold(letters[1], 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU )
     
     plt.imshow(letter, cmap='gray')
     plt.title("First Letter")
