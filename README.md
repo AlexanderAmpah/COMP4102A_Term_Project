@@ -10,6 +10,8 @@ Date: Winter Semester 2024
 
 GitHub Repo:    https://github.com/AlexanderAmpah/COMP4102A_Term_Project
 
+Use the command "pip install emnist" in the command line to import the EMNIST library.
+
 To run the code the code first enter "python main.py", then filepath of the image "images/test_boxing.jpg", followed by "-l" to load the model weights. Model weights files must end with a ".weights.h5" extension.
 
 Example: "python main.py images/test_boxing_30.jpg -l model_weights2.weights.h5" 
